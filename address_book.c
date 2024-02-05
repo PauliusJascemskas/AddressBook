@@ -4,22 +4,29 @@
 #include "linked_list.h"
 #define DELIMETER ","
 #define FILENAME "/addresses.csv"
+#define MAX 30
 
 struct Address
 {
-    char name[30];
-    char surname[30];
-    char email[30];
-    char phone[30];
+    char name[MAX];
+    char surname[MAX];
+    char email[MAX];
+    char phone[MAX];
     struct Address *next;
 };
 
+/// @brief Method to flush standard input
+void flushInput()
+{
+    int c;
+    while((c = getchar()) != '\n' && c != EOF);
+}
 
 /// @brief Method to prompt user and receive input as int
 /// @return int user entered
 int receive_int_from_user()
 {
-    char *p, s[100];
+    char *p, s[100]="";
     int selected_option;
     while (fgets(s, sizeof(s), stdin)) {
         selected_option = strtol(s, &p, 10);
@@ -29,19 +36,22 @@ int receive_int_from_user()
     }
 }
 
-/// @brief Method to prompt user and receive input as char array
+/// @brief Method to prompt user and receive input as a char array
 /// @return string user entered
 char* receive_string_from_user()
 {
-    char str[30];
+    char str[1024]="";
     while(1==1){
-        fgets(str, sizeof(str), stdin);
+        fgets(str, MAX, stdin);
         if( strlen(str) != 1){
+            if(strlen(str) >= MAX-1){
+                flushInput();
+            }
             str[strcspn(str, "\n")] = 0;
             char *ptr = str;
             return ptr;
         }
-        printf("\nInput cannot be empty\n");
+        printf("Input cannot be empty\n");
     }
 }
 
@@ -49,7 +59,7 @@ char* receive_string_from_user()
 /// @return string user entered
 char *receive_attribute_from_user()
 {
-    printf("By which attribute you want to search the address book? (name, surname, email, phone)\n");
+    printf("\nBy which attribute you want to search the address book? (name, surname, email, phone)\n");
     while(1==1){
         char *attribute = receive_string_from_user();
         if(strcmp(attribute, "name") == 0 || strcmp(attribute, "surname") == 0 || 
@@ -68,10 +78,10 @@ char *receive_attribute_value_from_user(){
 }
 
 
-/** @brief Method to add all the addresses from a csv file, create a node for each entry and add them to the linked list
-**  @param csv_dir - file path to the csv file 
-**  @param pnt - double pointer to the head of linked list
-**/
+/// @brief Method to add all the addresses from a csv file, create a node for each entry and add them to the linked list
+///  @param csv_dir - file path to the csv file 
+///  @param pnt - double pointer to the head of linked list
+
 void populate_book(char csv_dir[], struct Address **pnt)
 {
     FILE *file = NULL;
@@ -105,15 +115,14 @@ void populate_book(char csv_dir[], struct Address **pnt)
 /// @param placement to determine where to put new entry
 void menu_item_add_new_address(struct Address **pnt, char placement[])
 {
-    char name[30], surname[30], email[30], phone[30];
-    char *name_p, *surname_p, *email_p, *phone_p = NULL;
-    
-    name_p = &name;
-    surname_p = &surname;
-    email_p = &email;
-    phone_p = &phone;
+    char name[MAX]="", surname[MAX]="", email[MAX]="", phone[MAX]="";
+    char *name_p=NULL, *surname_p=NULL, *email_p=NULL, *phone_p = NULL;
+    name_p = &name[0];
+    surname_p = &surname[0];
+    email_p = &email[0];
+    phone_p = &phone[0];
 
-    printf("Type in the name: ");
+    printf("\nType in the name: ");
     strcpy( name_p, receive_string_from_user());
     printf("\nType in the surname: ");
     strcpy(surname_p, receive_string_from_user());
@@ -122,11 +131,12 @@ void menu_item_add_new_address(struct Address **pnt, char placement[])
     printf("\nType in the phone: ");
     strcpy(phone_p, receive_string_from_user());
     struct Address *new_address = create_node(name_p, surname_p, email_p, phone_p);
+
     if(strcmp(placement, "to_the_end") == 0){
         add_node_to_list(pnt, new_address);
     }
     else if(strcmp(placement, "by_position") == 0){
-        printf("Enter a position where to insert new entry:\n");
+        printf("Enter a position where to insert new entry:");
         int index_to_insert = receive_int_from_user();
         add_node_to_position(pnt, new_address, index_to_insert);
     }
@@ -160,23 +170,24 @@ void create_menu(struct Address **pnt)
             menu_item_add_new_address(pnt, "by_position");
             break;
         case 4: //Delete an address at position
-            printf("Enter index of an address you want to delete: \n");
+            printf("\nEnter index of an address you want to delete: ");
             int index_to_delete = receive_int_from_user();
             remove_one_node(pnt, index_to_delete);
             break;
         case 5: //Delete all addresses
             remove_all_nodes(pnt);
-            printf("All addresses removed succesfully.\n");
+            printf("\nAll addresses removed succesfully.\n");
             break;
         case 6: //Find address by positon
-            printf("Enter index of an address you want to find: \n");
+            printf("\nEnter index of an address you want to find: ");
             int index_to_find = receive_int_from_user();
             find_node_by_position(pnt, index_to_find);
             break;
         case 7: //Find address by attribute
-            char *attribute = receive_attribute_from_user();
-            char *value = receive_attribute_value_from_user();
-            find_node_by_attribute(pnt, attribute, value);
+            char attribute[MAX], value[MAX];
+            strcpy(&attribute[0], (receive_attribute_from_user()));
+            strcpy(&value[0], (receive_attribute_value_from_user()));
+            find_node_by_attribute(pnt, &attribute[0], &value[0]);
             break;
         case 8: //Exit the program
             return;
@@ -188,11 +199,9 @@ void create_menu(struct Address **pnt)
 }
 
 
-
 /// @brief Entry point of the program
 int main(void)
 {
-    printf("WELCOME\n");
     char *home_dir = getenv("HOME");
     char *filepath = malloc(strlen(home_dir) + strlen(FILENAME) + 1);
     strncpy(filepath, home_dir, strlen(home_dir) + 1);

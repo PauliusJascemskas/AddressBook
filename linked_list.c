@@ -14,10 +14,10 @@ struct Address
 
 /// @brief Creates a node from provided attributes
 /// @param name attribute 
-/// @param surname 
-/// @param email 
-/// @param phone 
-/// @return 
+/// @param surname node attribute
+/// @param email node attribute
+/// @param phone node attribute
+/// @return new node pointer
 struct Address* create_node(char *name, char *surname, char *email, char *phone)
 {
     struct Address *address = NULL;
@@ -37,7 +37,7 @@ struct Address* create_node(char *name, char *surname, char *email, char *phone)
 void get_all_nodes(struct Address **pnt)
 {
     if (*pnt == NULL){
-        printf("Address Book is empty, cannot print...\n");
+        printf("\nAddress Book is empty, nothing to print\n");
         return;
     }
     struct Address *tmp = *pnt;
@@ -135,7 +135,7 @@ void remove_one_node(struct Address **pnt, int index)
 void remove_all_nodes(struct Address **pnt)
 {
     if (*pnt == NULL){
-        printf("Nothing to delete\n");
+        printf("\nNothing to delete\n");
         return;
     }
     struct Address *to_delete = *pnt;
@@ -152,7 +152,7 @@ void remove_all_nodes(struct Address **pnt)
 void find_node_by_position(struct Address **pnt, int index)
 {
     if (*pnt == NULL){
-        printf("Address Book is empty, cannot find\n");
+        printf("\nAddress Book is empty, cannot find the address\n");
         return;
     }
     struct Address *tmp = *pnt;
@@ -198,10 +198,13 @@ void find_node_by_attribute(struct Address **pnt, char *attribute, char *value)
         counter++;
     }
     
-    if(result!=NULL)
+    if(result!=NULL){
+        printf("\n Address Found \n");
         printf("%d. %s %s %s %s\n", counter, tmp->name, tmp->surname, tmp->email, tmp->phone);
-    else
+    }
+    else{
         printf("\nNo address found\n");
+    }
     
 }
 
