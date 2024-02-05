@@ -33,9 +33,16 @@ int receive_int_from_user()
 /// @return string user entered
 char* receive_string_from_user()
 {
-    char *str = malloc(sizeof(char)*30);
-    fgets(str, 30, stdin);
-    return strtok(str, "\n");
+    char str[30];
+    while(1==1){
+        fgets(str, sizeof(str), stdin);
+        if( strlen(str) != 1){
+            str[strcspn(str, "\n")] = 0;
+            char *ptr = str;
+            return ptr;
+        }
+        printf("\nInput cannot be empty\n");
+    }
 }
 
 /// @brief Method to prompt user and receive input as a struct attribute
@@ -98,19 +105,23 @@ void populate_book(char csv_dir[], struct Address **pnt)
 /// @param placement to determine where to put new entry
 void menu_item_add_new_address(struct Address **pnt, char placement[])
 {
-    char *name = NULL;
-    char *surname = NULL;
-    char *email = NULL;
-    char *phone = NULL;
+    char name[30], surname[30], email[30], phone[30];
+    char *name_p, *surname_p, *email_p, *phone_p = NULL;
+    
+    name_p = &name;
+    surname_p = &surname;
+    email_p = &email;
+    phone_p = &phone;
+
     printf("Type in the name: ");
-    name = receive_string_from_user();
+    strcpy( name_p, receive_string_from_user());
     printf("\nType in the surname: ");
-    surname = receive_string_from_user();
+    strcpy(surname_p, receive_string_from_user());
     printf("\nType in the email: ");
-    email = receive_string_from_user();
+    strcpy(email_p, receive_string_from_user());
     printf("\nType in the phone: ");
-    phone = receive_string_from_user();
-    struct Address *new_address = create_node(name, surname, email, phone);
+    strcpy(phone_p, receive_string_from_user());
+    struct Address *new_address = create_node(name_p, surname_p, email_p, phone_p);
     if(strcmp(placement, "to_the_end") == 0){
         add_node_to_list(pnt, new_address);
     }
@@ -141,8 +152,6 @@ void create_menu(struct Address **pnt)
         switch(selected_option){
         case 1: //View all addresses
             get_all_nodes(pnt);
-            // printf("Press ENTER to go back");
-            // getchar();
             break;
         case 2: //Add new address
             menu_item_add_new_address(pnt, "to_the_end");
@@ -183,7 +192,7 @@ void create_menu(struct Address **pnt)
 /// @brief Entry point of the program
 int main(void)
 {
-    printf("WELCOME");
+    printf("WELCOME\n");
     char *home_dir = getenv("HOME");
     char *filepath = malloc(strlen(home_dir) + strlen(FILENAME) + 1);
     strncpy(filepath, home_dir, strlen(home_dir) + 1);
@@ -192,9 +201,10 @@ int main(void)
     struct Address *pnt = NULL;
 
     populate_book(filepath, &pnt);
-    free(filepath);
+    if( filepath != NULL) free(filepath);
+
     create_menu(&pnt);
-    if(pnt != NULL) 
-        free(pnt);
+    if(pnt != NULL) remove_all_nodes(&pnt);
+
     return 0;
 }
