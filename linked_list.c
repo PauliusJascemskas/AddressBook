@@ -119,13 +119,13 @@ void remove_one_node(struct Address **pnt, int index)
     struct Address *preceding = (*(pnt))->next;
     
     while (preceding != NULL){
-        previous = previous->next;
-        preceding = preceding->next;
         if(counter == index){
             previous->next = preceding->next;
             free(preceding);
             return;
         }
+        previous = previous->next;
+        preceding = preceding->next;
         counter++;
     }
 }
