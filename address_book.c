@@ -3,6 +3,9 @@
 #include <string.h>
 #include "linked_list.h"
 #include <signal.h>
+#include <setjmp.h>
+
+
 #define DELIMETER ","
 #define FILENAME "/addresses.csv"
 #define MAX_NAME 5
@@ -206,31 +209,32 @@ void create_menu(struct Address **pnt)
     }
 }
 
+jmp_buf return_to_top_level;
+
 void sigint_handler(int signum)
 {
-    if (pnt != NULL){
-        remove_all_nodes(&pnt);
-    }
-    exit(0);
+    longjmp (return_to_top_level, 1);
 }
-
 
 /// @brief Entry point of the program
 int main(void)
 {
     signal(SIGINT,sigint_handler);
     signal(SIGQUIT,sigint_handler);
+
     char *home_dir = getenv("HOME");
     filepath = malloc(strlen(home_dir) + strlen(FILENAME) + 1);
     strncpy(filepath, home_dir, strlen(home_dir) + 1);
     strncat(filepath, FILENAME, strlen(FILENAME) + 1);
     
 
-    populate_book(filepath, &pnt);
-    if( filepath != NULL) free(filepath);
-
-    create_menu(&pnt);
+    if (setjmp (return_to_top_level) == 0){
+        populate_book(filepath, &pnt);
+        if( filepath != NULL) free(filepath);
+        create_menu(&pnt);
+    }
     if(pnt != NULL) remove_all_nodes(&pnt);
+    printf("\nAll data deleted\n");
 
     return 0;
 }
