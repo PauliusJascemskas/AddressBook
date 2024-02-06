@@ -5,17 +5,22 @@
 #include <signal.h>
 #define DELIMETER ","
 #define FILENAME "/addresses.csv"
-#define MAX 30
+#define MAX_NAME 5
+#define MAX_SURNAME 10
+#define MAX_EMAIL 30
+#define MAX_PHONE 8
+#define MAX_ATTRIBUTE 30
+
 
 struct Address *pnt = NULL;
 char *filepath = NULL;
 
 struct Address
 {
-    char name[MAX];
-    char surname[MAX];
-    char email[MAX];
-    char phone[MAX];
+    char name[MAX_NAME];
+    char surname[MAX_SURNAME];
+    char email[MAX_EMAIL];
+    char phone[MAX_PHONE];
     struct Address *next;
 };
 
@@ -42,16 +47,16 @@ int receive_int_from_user()
 
 /// @brief Method to prompt user and receive input as a char array
 /// @return string user entered
-void receive_string_from_user(char *ptr)
+int receive_string_from_user(char *ptr, int char_amount)
 {
     while(1){
-        fgets(ptr, MAX, stdin);
+        fgets(ptr, char_amount, stdin);
         if( strlen(ptr) > 1){
-            if( strlen(ptr) >= MAX-1){
+            if( strlen(ptr) >= char_amount-1){
                 flushInput();
             }
             ptr[strcspn(ptr, "\n")] = 0;
-            return;
+            return 0;
         }
         printf("Input cannot be empty\n");
     }
@@ -61,11 +66,13 @@ void receive_string_from_user(char *ptr)
 /// @return string user entered
 void receive_attribute_from_user(char *attribute_pnt)
 {
+    int char_amount = 30;
     while(1){
-        receive_string_from_user(attribute_pnt);
-        if(strcmp(attribute_pnt, "name") == 0 || strcmp(attribute_pnt, "surname") == 0 || 
-           strcmp(attribute_pnt, "email") == 0 || strcmp(attribute_pnt, "phone") == 0){
-            return; 
+        if( receive_string_from_user(attribute_pnt, char_amount) == 0){;
+            if(strcmp(attribute_pnt, "name") == 0 || strcmp(attribute_pnt, "surname") == 0 || 
+            strcmp(attribute_pnt, "email") == 0 || strcmp(attribute_pnt, "phone") == 0){
+                return; 
+            }
         }
         printf("Wrong attribute (%s), try again", attribute_pnt);
     }
@@ -74,8 +81,9 @@ void receive_attribute_from_user(char *attribute_pnt)
 /// @brief Method to prompt user and receive input as char array
 /// @return string user entered
 void receive_attribute_value_from_user(char *value_pnt){
+    int char_amount = 30;
     printf("Attribute value: \n");
-    receive_string_from_user(value_pnt);
+    receive_string_from_user(value_pnt, char_amount);
 }
 
 
@@ -117,21 +125,17 @@ void populate_book(char csv_dir[], struct Address **pnt)
 /// @param placement to determine where to put new entry
 void menu_item_add_new_address(struct Address **pnt, char placement[])
 {
-    char name[MAX]="", surname[MAX]="", email[MAX]="", phone[MAX]="";
-    char *name_p=NULL, *surname_p=NULL, *email_p=NULL, *phone_p = NULL;
-    name_p = &name[0];
-    surname_p = &surname[0];
-    email_p = &email[0];
-    phone_p = &phone[0];
+    char name[MAX_NAME]="", surname[MAX_SURNAME]="", email[MAX_EMAIL]="", phone[MAX_PHONE]="";
+    char *name_p=&name[0], *surname_p=&surname[0], *email_p=&email[0], *phone_p = &phone[0];
 
     printf("\nType in the name: ");
-    receive_string_from_user(name_p);
+    receive_string_from_user(name_p, MAX_NAME);
     printf("\nType in the surname: ");
-    receive_string_from_user(surname_p);
+    receive_string_from_user(surname_p, MAX_SURNAME);
     printf("\nType in the email: ");
-    receive_string_from_user(email_p);
+    receive_string_from_user(email_p, MAX_EMAIL);
     printf("\nType in the phone: ");
-    receive_string_from_user(phone_p);
+    receive_string_from_user(phone_p, MAX_PHONE);
     struct Address *new_address = create_node(name_p, surname_p, email_p, phone_p);
 
     if(strcmp(placement, "to_the_end") == 0){
@@ -187,7 +191,7 @@ void create_menu(struct Address **pnt)
             break;
         case 7: //Find address by attribute
             printf("\nBy which attribute you want to search the address book? (name, surname, email, phone)\n");
-            char attribute[MAX]="", value[MAX]="";
+            char attribute[MAX_ATTRIBUTE]="", value[MAX_ATTRIBUTE]="";
             char *attribute_pnt = &attribute[0], *value_pnt = &value[0];
             receive_attribute_from_user(attribute_pnt);
             receive_attribute_value_from_user(value_pnt);
