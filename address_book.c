@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "linked_list.h"
+#include <signal.h>
 #define DELIMETER ","
 #define FILENAME "/addresses.csv"
 #define MAX 30
+
+struct Address *pnt = NULL;
+char *filepath = NULL;
 
 struct Address
 {
@@ -31,7 +35,7 @@ int receive_int_from_user()
     while (fgets(s, sizeof(s), stdin)) {
         selected_option = strtol(s, &p, 10);
         if (p == s || *p != '\n') {
-            printf("Invalid input! \n;");
+            printf("Invalid input! \n");
         } else return selected_option;
     }
 }
@@ -40,7 +44,7 @@ int receive_int_from_user()
 /// @return string user entered
 char* receive_string_from_user()
 {
-    char str[1024]="";
+    char str[30]="";
     while(1==1){
         fgets(str, MAX, stdin);
         if( strlen(str) != 1){
@@ -108,6 +112,7 @@ void populate_book(char csv_dir[], struct Address **pnt)
             add_node_to_list(pnt, address);
         }
     }
+    fclose(file);
 }
 
 /// @brief Method to display new address entry menu, check inputs and add to linked list 
@@ -148,7 +153,7 @@ void menu_item_add_new_address(struct Address **pnt, char placement[])
 void create_menu(struct Address **pnt)
 {
     while(1==1){
-        printf("Select an option:\n");
+        printf("\nSelect an option:\n");
         printf("1. View all addresses.\n");
         printf("2. Add new address.\n");
         printf("3. Add new address to position.\n");
@@ -198,16 +203,25 @@ void create_menu(struct Address **pnt)
     }
 }
 
+void sigint_handler(int signum)
+{
+    if (pnt != NULL){
+        remove_all_nodes(&pnt);
+    }
+    exit(0);
+}
+
 
 /// @brief Entry point of the program
 int main(void)
 {
+    signal(SIGINT,sigint_handler);
+    signal(SIGQUIT,sigint_handler);
     char *home_dir = getenv("HOME");
-    char *filepath = malloc(strlen(home_dir) + strlen(FILENAME) + 1);
+    filepath = malloc(strlen(home_dir) + strlen(FILENAME) + 1);
     strncpy(filepath, home_dir, strlen(home_dir) + 1);
     strncat(filepath, FILENAME, strlen(FILENAME) + 1);
     
-    struct Address *pnt = NULL;
 
     populate_book(filepath, &pnt);
     if( filepath != NULL) free(filepath);
