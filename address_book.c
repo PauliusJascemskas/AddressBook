@@ -63,7 +63,6 @@ char* receive_string_from_user()
 /// @return string user entered
 char *receive_attribute_from_user()
 {
-    printf("\nBy which attribute you want to search the address book? (name, surname, email, phone)\n");
     while(1==1){
         char *attribute = receive_string_from_user();
         if(strcmp(attribute, "name") == 0 || strcmp(attribute, "surname") == 0 || 
@@ -189,6 +188,7 @@ void create_menu(struct Address **pnt)
             find_node_by_position(pnt, index_to_find);
             break;
         case 7: //Find address by attribute
+            printf("\nBy which attribute you want to search the address book? (name, surname, email, phone)\n");
             char attribute[MAX], value[MAX];
             strcpy(&attribute[0], (receive_attribute_from_user()));
             strcpy(&value[0], (receive_attribute_value_from_user()));
