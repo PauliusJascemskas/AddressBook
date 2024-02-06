@@ -42,18 +42,16 @@ int receive_int_from_user()
 
 /// @brief Method to prompt user and receive input as a char array
 /// @return string user entered
-char* receive_string_from_user()
+void receive_string_from_user(char *ptr)
 {
-    char str[30]="";
-    while(1==1){
-        fgets(str, MAX, stdin);
-        if( strlen(str) != 1){
-            if(strlen(str) >= MAX-1){
+    while(1){
+        fgets(ptr, MAX, stdin);
+        if( strlen(ptr) > 1){
+            if( strlen(ptr) >= MAX-1){
                 flushInput();
             }
-            str[strcspn(str, "\n")] = 0;
-            char *ptr = str;
-            return ptr;
+            ptr[strcspn(ptr, "\n")] = 0;
+            return;
         }
         printf("Input cannot be empty\n");
     }
@@ -61,23 +59,23 @@ char* receive_string_from_user()
 
 /// @brief Method to prompt user and receive input as a struct attribute
 /// @return string user entered
-char *receive_attribute_from_user()
+void receive_attribute_from_user(char *attribute_pnt)
 {
-    while(1==1){
-        char *attribute = receive_string_from_user();
-        if(strcmp(attribute, "name") == 0 || strcmp(attribute, "surname") == 0 || 
-           strcmp(attribute, "email") == 0 || strcmp(attribute, "phone") == 0){
-            return attribute; 
+    while(1){
+        receive_string_from_user(attribute_pnt);
+        if(strcmp(attribute_pnt, "name") == 0 || strcmp(attribute_pnt, "surname") == 0 || 
+           strcmp(attribute_pnt, "email") == 0 || strcmp(attribute_pnt, "phone") == 0){
+            return; 
         }
-        printf("Wrong attribute (%s), try again", attribute);
+        printf("Wrong attribute (%s), try again", attribute_pnt);
     }
 }
 
 /// @brief Method to prompt user and receive input as char array
 /// @return string user entered
-char *receive_attribute_value_from_user(){
+void receive_attribute_value_from_user(char *value_pnt){
     printf("Attribute value: \n");
-    char *attribute = receive_string_from_user();
+    receive_string_from_user(value_pnt);
 }
 
 
@@ -127,13 +125,13 @@ void menu_item_add_new_address(struct Address **pnt, char placement[])
     phone_p = &phone[0];
 
     printf("\nType in the name: ");
-    strcpy( name_p, receive_string_from_user());
+    receive_string_from_user(name_p);
     printf("\nType in the surname: ");
-    strcpy(surname_p, receive_string_from_user());
+    receive_string_from_user(surname_p);
     printf("\nType in the email: ");
-    strcpy(email_p, receive_string_from_user());
+    receive_string_from_user(email_p);
     printf("\nType in the phone: ");
-    strcpy(phone_p, receive_string_from_user());
+    receive_string_from_user(phone_p);
     struct Address *new_address = create_node(name_p, surname_p, email_p, phone_p);
 
     if(strcmp(placement, "to_the_end") == 0){
@@ -151,7 +149,7 @@ void menu_item_add_new_address(struct Address **pnt, char placement[])
 /// @param pnt double pointer to the head of linked list
 void create_menu(struct Address **pnt)
 {
-    while(1==1){
+    while(1){
         printf("\nSelect an option:\n");
         printf("1. View all addresses.\n");
         printf("2. Add new address.\n");
@@ -189,10 +187,11 @@ void create_menu(struct Address **pnt)
             break;
         case 7: //Find address by attribute
             printf("\nBy which attribute you want to search the address book? (name, surname, email, phone)\n");
-            char attribute[MAX], value[MAX];
-            strcpy(&attribute[0], (receive_attribute_from_user()));
-            strcpy(&value[0], (receive_attribute_value_from_user()));
-            find_node_by_attribute(pnt, &attribute[0], &value[0]);
+            char attribute[MAX]="", value[MAX]="";
+            char *attribute_pnt = &attribute[0], *value_pnt = &value[0];
+            receive_attribute_from_user(attribute_pnt);
+            receive_attribute_value_from_user(value_pnt);
+            find_node_by_attribute(pnt, attribute_pnt, value_pnt);
             break;
         case 8: //Exit the program
             return;

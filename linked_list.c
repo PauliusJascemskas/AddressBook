@@ -205,6 +205,7 @@ void find_node_by_attribute(struct Address **pnt, char *attribute, char *value)
     int counter = 1;
     struct Address *tmp = *pnt;
     int flag = 0;
+    printf("%s %s\n", attribute, value);
     while (tmp != NULL) {
         if(check_if_attribute_value_same(tmp, attribute, value) == 1){
             if(flag == 0)
