@@ -22,6 +22,10 @@ struct Address* create_node(char *name, char *surname, char *email, char *phone)
 {
     struct Address *address = NULL;
     address = (struct Address*) malloc(sizeof(struct Address));
+    if(address == NULL){
+        printf("Failed to allocate memory!");
+        return NULL;
+    }
     
     strcpy(address->name, name);
     strcpy(address->surname, surname);
@@ -31,6 +35,13 @@ struct Address* create_node(char *name, char *surname, char *email, char *phone)
 
     return address;
 }
+
+
+void print_one_address(struct Address *address, int counter)
+{
+    printf("%d. %s %s %s %s\n", counter, address->name, address->surname, address->email, address->phone);
+}
+
 
 /// @brief Displays all entries in the address book
 /// @param pnt double pointer to the head of linked list
@@ -43,7 +54,7 @@ void get_all_nodes(struct Address **pnt)
     struct Address *tmp = *pnt;
     int counter = 1;
     do {
-        printf("%d. %s %s %s %s\n", counter, tmp->name, tmp->surname, tmp->email, tmp->phone);
+        print_one_address(tmp, counter);
         tmp = tmp->next;
         counter++;
     } while (tmp != NULL);
@@ -159,12 +170,29 @@ void find_node_by_position(struct Address **pnt, int index)
     int counter = 1;
     while (tmp != NULL) {
         if(counter == index){
-            printf("%d. %s %s %s %s\n", counter, tmp->name, tmp->surname, tmp->email, tmp->phone);
+            print_one_address(tmp, counter);
             return;
         }
         tmp = tmp->next;
         counter++;
     } 
+}
+
+int check_if_attribute_value_same(struct Address *address, char *attribute, char *value)
+{
+    if(strcmp(attribute, "name") == 0 && strcmp(address->name, value) == 0){
+        return 1;
+    }
+    if(strcmp(attribute, "surname") == 0 && strcmp(address->surname, value) == 0){
+        return 1;
+    }
+    if(strcmp(attribute, "email") == 0 && strcmp(address->email, value) == 0){
+        return 1;
+    }
+    if(strcmp(attribute, "phone") == 0 && strcmp(address->phone, value) == 0){
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -176,36 +204,20 @@ void find_node_by_attribute(struct Address **pnt, char *attribute, char *value)
 {
     int counter = 1;
     struct Address *tmp = *pnt;
-    struct Address *result = NULL;
+    int flag = 0;
     while (tmp != NULL) {
-        if(strcmp(attribute, "name") == 0 && strcmp(tmp->name, value) == 0){
-            result = tmp;
-            break;
-        }
-        if(strcmp(attribute, "surname") == 0 && strcmp(tmp->surname, value) == 0){
-            result = tmp;
-            break;
-        }
-        if(strcmp(attribute, "email") == 0 && strcmp(tmp->email, value) == 0){
-            result = tmp;
-            break;
-        }
-        if(strcmp(attribute, "phone") == 0 && strcmp(tmp->phone, value) == 0){
-            result = tmp;
-            break;
+        if(check_if_attribute_value_same(tmp, attribute, value) == 1){
+            if(flag == 0)
+                printf("\nAddress found:\n ");
+            print_one_address(tmp, counter);
+            flag = 1;
         }
         tmp = tmp->next;
         counter++;
     }
     
-    if(result!=NULL){
-        printf("\n Address Found \n");
-        printf("%d. %s %s %s %s\n", counter, tmp->name, tmp->surname, tmp->email, tmp->phone);
-    }
-    else{
-        printf("\nNo address found\n");
-    }
-    
+    if(flag == 0)
+        printf("No matches.");    
 }
 
 
