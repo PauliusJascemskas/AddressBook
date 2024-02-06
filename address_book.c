@@ -3,8 +3,8 @@
 #include <string.h>
 #include "linked_list.h"
 #include <signal.h>
-#include <setjmp.h>
-
+#include <fcntl.h>
+#include <unistd.h>
 
 #define DELIMETER ","
 #define FILENAME "/addresses.csv"
@@ -14,7 +14,7 @@
 #define MAX_PHONE 8
 #define MAX_ATTRIBUTE 30
 
-
+volatile sig_atomic_t time_to_stop = 0;
 struct Address *pnt = NULL;
 char *filepath = NULL;
 
@@ -40,29 +40,34 @@ int receive_int_from_user()
 {
     char *p, s[100]="";
     int selected_option;
-    while (fgets(s, sizeof(s), stdin)) {
-        selected_option = strtol(s, &p, 10);
-        if (p == s || *p != '\n') {
-            printf("Invalid input! \n");
-        } else return selected_option;
+    while(time_to_stop==0){
+        if (fgets(s, sizeof(s), stdin) != NULL) {
+            selected_option = strtol(s, &p, 10);
+            if (p == s || *p != '\n') {
+                printf("Invalid input! \n");
+            } else return selected_option;
+        }
     }
+    return 0;
 }
 
 /// @brief Method to prompt user and receive input as a char array
 /// @return string user entered
 int receive_string_from_user(char *ptr, int char_amount)
 {
-    while(1){
-        fgets(ptr, char_amount, stdin);
-        if( strlen(ptr) > 1){
-            if( strlen(ptr) >= char_amount-1){
-                flushInput();
+    while(time_to_stop == 0){
+        if (fgets(ptr, char_amount, stdin) != NULL){
+            if(time_to_stop != 0) return 0;
+            if( strlen(ptr) > 1){
+                if( strlen(ptr) >= char_amount-1){
+                    flushInput();
+                }
+                ptr[strcspn(ptr, "\n")] = 0;
+                return 0;
             }
-            ptr[strcspn(ptr, "\n")] = 0;
-            return 0;
         }
-        printf("Input cannot be empty\n");
     }
+    return 0;
 }
 
 /// @brief Method to prompt user and receive input as a struct attribute
@@ -70,8 +75,9 @@ int receive_string_from_user(char *ptr, int char_amount)
 void receive_attribute_from_user(char *attribute_pnt)
 {
     int char_amount = 30;
-    while(1){
+    while(time_to_stop == 0){
         if( receive_string_from_user(attribute_pnt, char_amount) == 0){;
+            if(time_to_stop != 0) return;
             if(strcmp(attribute_pnt, "name") == 0 || strcmp(attribute_pnt, "surname") == 0 || 
             strcmp(attribute_pnt, "email") == 0 || strcmp(attribute_pnt, "phone") == 0){
                 return; 
@@ -83,10 +89,13 @@ void receive_attribute_from_user(char *attribute_pnt)
 
 /// @brief Method to prompt user and receive input as char array
 /// @return string user entered
-void receive_attribute_value_from_user(char *value_pnt){
-    int char_amount = 30;
-    printf("Attribute value: \n");
-    receive_string_from_user(value_pnt, char_amount);
+void receive_attribute_value_from_user(char *value_pnt)
+{
+    while(time_to_stop == 0){
+        int char_amount = 30;
+        printf("Attribute value: \n");
+        receive_string_from_user(value_pnt, char_amount);
+    }
 }
 
 
@@ -100,7 +109,7 @@ void populate_book(char csv_dir[], struct Address **pnt)
     file = fopen(csv_dir, "r");
 
     if (file == NULL){
-        printf("Error while openning the csv file %s", csv_dir);
+        printf("Error while openning the csv file %s", filepath);
         return;
     }
 
@@ -131,23 +140,33 @@ void menu_item_add_new_address(struct Address **pnt, char placement[])
     char name[MAX_NAME]="", surname[MAX_SURNAME]="", email[MAX_EMAIL]="", phone[MAX_PHONE]="";
     char *name_p=&name[0], *surname_p=&surname[0], *email_p=&email[0], *phone_p = &phone[0];
 
-    printf("\nType in the name: ");
-    receive_string_from_user(name_p, MAX_NAME);
-    printf("\nType in the surname: ");
-    receive_string_from_user(surname_p, MAX_SURNAME);
-    printf("\nType in the email: ");
-    receive_string_from_user(email_p, MAX_EMAIL);
-    printf("\nType in the phone: ");
-    receive_string_from_user(phone_p, MAX_PHONE);
-    struct Address *new_address = create_node(name_p, surname_p, email_p, phone_p);
-
-    if(strcmp(placement, "to_the_end") == 0){
-        add_node_to_list(pnt, new_address);
+    if(time_to_stop == 0){
+        printf("\nType in the name: ");
+        receive_string_from_user(name_p, MAX_NAME);
     }
-    else if(strcmp(placement, "by_position") == 0){
-        printf("Enter a position where to insert new entry:");
-        int index_to_insert = receive_int_from_user();
-        add_node_to_position(pnt, new_address, index_to_insert);
+
+    if(time_to_stop == 0){
+        printf("\nType in the surname: ");
+        receive_string_from_user(surname_p, MAX_SURNAME);
+    }
+    if(time_to_stop == 0){
+        printf("\nType in the email: ");
+        receive_string_from_user(email_p, MAX_EMAIL);
+    }
+    if(time_to_stop == 0){
+        printf("\nType in the phone: ");
+        receive_string_from_user(phone_p, MAX_PHONE);
+        struct Address *new_address = create_node(name_p, surname_p, email_p, phone_p);
+    
+
+        if(strcmp(placement, "to_the_end") == 0){
+            add_node_to_list(pnt, new_address);
+        }
+        else if(strcmp(placement, "by_position") == 0){
+            printf("Enter a position where to insert new entry:");
+            int index_to_insert = receive_int_from_user();
+            add_node_to_position(pnt, new_address, index_to_insert);
+        }
     }
 
 }
@@ -156,7 +175,7 @@ void menu_item_add_new_address(struct Address **pnt, char placement[])
 /// @param pnt double pointer to the head of linked list
 void create_menu(struct Address **pnt)
 {
-    while(1){
+    while(time_to_stop == 0){
         printf("\nSelect an option:\n");
         printf("1. View all addresses.\n");
         printf("2. Add new address.\n");
@@ -166,6 +185,7 @@ void create_menu(struct Address **pnt)
         printf("6. Find address by position.\n");
         printf("7. Find address by attribute.\n");
         printf("8. Exit the program.\n");
+        
         
         int selected_option = receive_int_from_user();
         switch(selected_option){
@@ -198,6 +218,7 @@ void create_menu(struct Address **pnt)
             char *attribute_pnt = &attribute[0], *value_pnt = &value[0];
             receive_attribute_from_user(attribute_pnt);
             receive_attribute_value_from_user(value_pnt);
+            if(time_to_stop != 0) return;
             find_node_by_attribute(pnt, attribute_pnt, value_pnt);
             break;
         case 8: //Exit the program
@@ -209,11 +230,10 @@ void create_menu(struct Address **pnt)
     }
 }
 
-jmp_buf return_to_top_level;
 
 void sigint_handler(int signum)
 {
-    longjmp (return_to_top_level, 1);
+    time_to_stop = 1;
 }
 
 /// @brief Entry point of the program
@@ -222,18 +242,23 @@ int main(void)
     signal(SIGINT,sigint_handler);
     signal(SIGQUIT,sigint_handler);
 
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (flags == -1)
+
+        return 1;
+    if (fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK) == -1)
+        return 2;
+
     char *home_dir = getenv("HOME");
     filepath = malloc(strlen(home_dir) + strlen(FILENAME) + 1);
     strncpy(filepath, home_dir, strlen(home_dir) + 1);
     strncat(filepath, FILENAME, strlen(FILENAME) + 1);
     
 
-    if (setjmp (return_to_top_level) == 0){
-        populate_book(filepath, &pnt);
-        if( filepath != NULL) free(filepath);
-        create_menu(&pnt);
-    }
-    if(pnt != NULL) remove_all_nodes(&pnt);
+    populate_book(filepath, &pnt);
+    if( filepath != NULL) free(filepath);
+    create_menu(&pnt);
+    if( pnt != NULL ) remove_all_nodes(&pnt);
     printf("\nAll data deleted\n");
 
     return 0;
